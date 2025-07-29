@@ -1,0 +1,82 @@
+name: Pipeline CI/CD untuk Practest
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  DOCKER_IMAGE_NAME: practest-ndaruwindra
+  DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+  CONTAINER_REGISTRY: docker.io
+  YOUR_NAME: ndaruwindra
+
+jobs:
+  build_push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repositori
+        uses: actions/checkout@v4
+
+      - name: Login ke Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ env.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build Image Docker
+        run: |
+          docker build -t ${{ env.CONTAINER_REGISTRY }}/${{ env.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}:latest .
+
+      - name: Push Image Docker
+        run: |
+          docker push ${{ env.CONTAINER_REGISTRY }}/${{ env.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}:latest
+
+  deploy:
+    needs: build_push
+    runs-on: ubuntu-latest
+    services:
+      docker:
+        image: docker:dind
+        options: --privileged
+
+    steps:
+      - name: Login ke Docker Hub untuk Deploy
+        uses: docker/login-action@v3
+        with:
+          username: ${{ env.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Pull Image Docker
+        run: |
+          docker pull ${{ env.CONTAINER_REGISTRY }}/${{ env.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}:latest
+
+      - name: Hentikan dan Hapus Container Lama (jika ada)
+        run: |
+          CONTAINER_NAME="practest-${{ env.YOUR_NAME }}"
+          if docker ps -a --format '{{.Names}}' | grep -q "$CONTAINER_NAME"; then
+            echo "Menghentikan container yang sudah ada: $CONTAINER_NAME"
+            docker stop $CONTAINER_NAME
+            echo "Menghapus container yang sudah ada: $CONTAINER_NAME"
+            docker rm $CONTAINER_NAME
+          fi
+        shell: bash
+
+      - name: Jalankan Container Docker
+        run: |
+          CONTAINER_NAME="practest-${{ env.YOUR_NAME }}"
+          docker run -d \
+            --name $CONTAINER_NAME \
+            -p 8081:80 \
+            ${{ env.CONTAINER_REGISTRY }}/${{ env.DOCKER_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}:latest
+
+      - name: Verifikasi Container Berjalan
+        run: |
+          echo "Memverifikasi container yang berjalan..."
+          docker ps
+
+      - name: Verifikasi Akses Web Server dengan Curl
+        run: |
+          echo "Memverifikasi akses web server dengan curl..."
+          sleep 5
+          curl http://localhost:8081/practest.html
