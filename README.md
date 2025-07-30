@@ -117,7 +117,6 @@ Pipeline terdiri dari dua tahap (Jobs):
 * Koneksi internet tersedia untuk GitHub Actions *runner* untuk mengakses Docker Hub.
 * Kredensial Docker Hub yang diberikan melalui GitHub Secrets adalah valid dan memiliki izin *push* ke repositori Docker Hub Anda.
 * Base *image* `alpine:3.17.0` dan *image* `docker:dind` tersedia di Docker Hub.
-* Untuk bagian Bonus, diasumsikan `mysqldump` dan `mysql` tersedia di sistem yang menjalankan *script* tersebut.
 
 ---
 
