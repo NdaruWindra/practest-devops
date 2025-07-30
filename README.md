@@ -1,5 +1,3 @@
-﻿# practest-devops
-
 # Proyek DevOps Technical Test: Web Server Nginx dengan CI/CD
 
 Proyek ini mendemonstrasikan kemampuan membangun dan mendeploy aplikasi web sederhana menggunakan Docker, Nginx, dan mengimplementasikan pipeline CI/CD dengan GitHub Actions.
